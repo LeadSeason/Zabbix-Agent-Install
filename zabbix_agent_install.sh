@@ -1,61 +1,58 @@
-apt install lsb-release -y
+#!/bin/env bash
 
-if [ -n $1 ]; then
+DebianBased() {
+    echo "Debian based distrobution detected."
+    apt-get update -y
+    apt-get install zabbix-agent || exit 11
+}
+
+ArchBased() {
+    echo "Arch based distrobution detected."
+    pacman -Syu --noconfirm zabbix-agent || exit 11
+}
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Insufficient permissions."
+    exit 10
+fi
+
+zabbixIP="10.50.0.15"
+echo "Zabbix address 10.50.0.15"
+
 agent_config="# This is a configuration file for Zabbix agent daemon (Unix)
+PidFile=/run/zabbix/zabbix_agentd.pid
 LogFile=/var/log/zabbix-agent/zabbix_agentd.log
 LogFileSize=0
 
-Server=$1
+Server=$zabbixIP
 ListenPort=10050
 
 ServerActive=127.0.0.1
+
+Include=/etc/zabbix/zabbix_agentd.conf.d/*.conf
 "
-else
-echo "Error: please specify your Zabbix server as an argument. Example: bash zabbix_agent_install.sh 192.168.1.61. Replace the IP with your zabbix server."
-exit 1
-fi
 
-if [ "$(lsb_release -is)" = "Ubuntu" ]; then
-    echo "Ubuntu detected, continuing with install."
+echo "Installing Zabbix"
+case "$(lsb_release -is)" in
+    "Ubuntu" | "Debian" | "Vyos") DebianBased;;
+    "Arch") ArchBased;;
+    *) echo "Your distribution \"$(lsb_release  -is) $(lsb_release  -rs)\" is not supported." && exit 12;;
+esac
 
-    apt-get update -y > /dev/null
-    apt-get install zabbix-agent -y > /dev/null
+echo "Enabaling Zabbix at boot."
+systemctl enable zabbix-agent
+echo "\033[0;32mDONE"
 
-    systemctl enable --now zabbix-agent
-elif [ "$(lsb_release -is)" = "Debian" ]; then
-    echo "Debian detected, continuing with install."
-
-    apt-get update -y > /dev/null
-    apt-get install zabbix-agent -y > /dev/null
-
-    systemctl enable --now zabbix-agent
-elif [ "$(lsb_release -is)" = "Arch" ]; then
-    echo "Arch detected, continuing with install."
-
-    pacman -Syu > /dev/null
-    yes | pacman -S zabbix-agent > /dev/null
-
-    systemctl enable --now zabbix-agent
-elif [ "$(lsb_release -is)" = "Vyos" ]; then
-    echo "Vyos detected, continuing with install."
-
-    apt update > /dev/null
-    apt install zabbix-agent > /dev/null
-
-    systemctl enable --now zabbix-agent
-else
-  echo "Your distribution \"$(lsb_release  -is) $(lsb_release  -rs)\" is not supported."
-  exit
-fi
-
+echo -n "Installing configuration ..."
+mv /etc/zabbix/zabbix_agentd.conf /etc/zabbix/zabbix_agentd.conf.old
 echo "$agent_config" > /etc/zabbix/zabbix_agentd.conf
+echo "\033[0;32mDONE"
 
-echo "Zabbix configuration saved at /etc/zabbix/zabbix_agentd.conf."
+echo -n "Restaring Zabbix agent ... "
+systemctl restart zabbix-agent
+echo "\033[0;32mDONE"
 
 ip=$(ip -o route get to 8.8.8.8 | sed -n 's/.*src \([0-9.]\+\).*/\1/p')
 hostname=$(cat /etc/hostname)
-
-systemctl restart zabbix-agent
-echo "Restarted Zabbix agent"
 
 echo "The Zabbix agent has been installed and configured. Your primary IP is $ip and the hostname is $hostname"
