@@ -10,7 +10,7 @@ SYSTEM_HOSTNAME=$(cat /etc/hostname)
 DebianBased() {
     echo "Debian based distribution detected."
     apt-get update -y
-    apt-get install zabbix-agent || exit 11
+    apt-get install -y zabbix-agent || exit 11
 }
 
 # Archlinux based distribution install.
