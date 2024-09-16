@@ -40,6 +40,9 @@ echo "Zabbix server address: $ZABBIX_SERVER"
 # Configuration
 ZABBIX_AGENT_CONFIGURATION="# This is a configuration file for Zabbix agent daemon (Unix)
 PidFile=/run/zabbix/zabbix_agentd.pid
+LogFile=/var/log/zabbix-agent/zabbix_agentd.log
+
+DenyKey=system.run[*]
 
 Server=$ZABBIX_SERVER
 ListenPort=10050
