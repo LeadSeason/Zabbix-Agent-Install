@@ -32,7 +32,7 @@ usage() {
     --port <zabbix_port>        Zabbix-agent listening port. Defaults to 10050
     --psk-enabled <0|1>         Enable psk, outputs psk settings at the end of the script. Defaults to 1.
 "
-    exit 1
+    exit 0
 }
 
 while [ "$#" -gt 0 ]; do
@@ -48,6 +48,9 @@ while [ "$#" -gt 0 ]; do
         --psk-enabled)
             ZABBIX_PKS_ENABLED="$2"
             shift 2
+            ;;
+	    --help)
+	        usage
             ;;
         *)
             echo "Unknown argument: $1"
