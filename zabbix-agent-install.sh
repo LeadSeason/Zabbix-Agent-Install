@@ -13,6 +13,19 @@ ZABBIX_SERVER="10.10.10.10"
 ZABBIX_PORT="10050"
 ZABBIX_PKS_ENABLED=1
 
+ZABBIX_CONF_LOCATION="/etc/zabbix/zabbix_agentd.conf"
+ZABBIX_CONF_DIR_LOCATION="/etc/zabbix/"
+ZABBIX_LOG_LOCATION="/var/log/zabbix/zabbix_agentd.log"
+ZABBIX_LOG_DIR_LOCATION="/var/log/zabbix/"
+ZABBIX_PID_LOCATION="/run/zabbix/zabbix_agentd.pid"
+ZABBIX_USER_NAME="zabbix"
+
+SYSTEM_DISTRO=$(awk -F= '$1 == "ID" {print $2}' /etc/os-release)
+SYSTEM_IP=$(ip -o route get to 8.8.8.8 | sed -n 's/.*src \([^ ]*\).*/\1/p')
+SYSTEM_IPV6=$(ip -o route get to 2001:4860:4860::8888 | sed -n 's/.*src \([^ ]*\).*/\1/p')
+SYSTEM_HOSTNAME=$(cat /etc/hostname)
+
+# Argument handeling
 usage() {
     printf "%s\n" "Usage: $0 
     --server <zabbix_server>    Server IP, seporated with \", \" for multi ip. Defaults to 10.10.10.10
@@ -47,17 +60,6 @@ echo "Zabbix Server: $ZABBIX_SERVER"
 echo "Zabbix Port: $ZABBIX_PORT"
 echo "PSK Enabled: $ZABBIX_PKS_ENABLED"
 
-SYSTEM_DISTRO=$(awk -F= '$1 == "ID" {print $2}' /etc/os-release)
-SYSTEM_IP=$(ip -o route get to 8.8.8.8 | sed -n 's/.*src \([^ ]*\).*/\1/p')
-SYSTEM_IPV6=$(ip -o route get to 2001:4860:4860::8888 | sed -n 's/.*src \([^ ]*\).*/\1/p')
-SYSTEM_HOSTNAME=$(cat /etc/hostname)
-
-ZABBIX_CONF_LOCATION="/etc/zabbix/zabbix_agentd.conf"
-ZABBIX_CONF_DIR_LOCATION="/etc/zabbix/"
-ZABBIX_LOG_LOCATION="/var/log/zabbix/zabbix_agentd.log"
-ZABBIX_LOG_DIR_LOCATION="/var/log/zabbix/"
-ZABBIX_PID_LOCATION="/run/zabbix/zabbix_agentd.pid"
-ZABBIX_USER_NAME="zabbix"
 # Install Zabbix-agent
 # Ubuntu
 if [ "$SYSTEM_DISTRO" = "Ubuntu" ]; then
