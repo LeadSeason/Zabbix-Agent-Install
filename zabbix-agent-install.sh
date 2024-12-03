@@ -1,4 +1,5 @@
 #!/bin/bash
+# vim:ft=sh tabstop=4 shiftwidth=4
 
 set -e
 
@@ -18,6 +19,7 @@ ZABBIX_CONF_DIR_LOCATION="/etc/zabbix/"
 ZABBIX_LOG_LOCATION="/var/log/zabbix/zabbix_agentd.log"
 ZABBIX_LOG_DIR_LOCATION="/var/log/zabbix/"
 ZABBIX_PID_LOCATION="/run/zabbix/zabbix_agentd.pid"
+ZABBIX_PID_DIR_LOCATION="/run/zabbix/"
 ZABBIX_USER_NAME="zabbix"
 
 SYSTEM_DISTRO=$(awk -F= '$1 == "ID" {print $2}' /etc/os-release)
@@ -66,7 +68,7 @@ echo "PSK Enabled: $ZABBIX_PKS_ENABLED"
 
 # Install Zabbix-agent
 # Ubuntu
-if [ "$SYSTEM_DISTRO" = "Ubuntu" ]; then
+if [ "$SYSTEM_DISTRO" = "ubuntu" ]; then
 	echo "Ubuntu detected, continuing with install."
 	
 	# Ubuntu doesnt provide Zabbix-agent, so we need to install zabbix official repos
@@ -88,7 +90,7 @@ elif [ "$SYSTEM_DISTRO" = "debian" ]; then
 	apt-get install zabbix-agent -y > /dev/null
 
 # ArchLinux
-elif [ "$SYSTEM_DISTRO" = "Arch" ]; then
+elif [ "$SYSTEM_DISTRO" = "arch" ]; then
 	# We do not know what state the arch is so we force upgrade.
 	echo "Arch based distribution detected."
 	echo "Warning fully upgradeing before installing"
@@ -97,6 +99,7 @@ elif [ "$SYSTEM_DISTRO" = "Arch" ]; then
 
  	# @TODO
   	# Zabbix has diffrent dirrectorys for logs. Add later.
+    ZABBIX_USER_NAME="zabbix-agent"
  	
 	pacman -Sy --noconfirm archlinux-keyring || exit 11
 	pacman -Syu --noconfirm || exit 11
@@ -124,7 +127,7 @@ elif [ "$SYSTEM_DISTRO" = "\"rocky\"" ]; then
 
 # Default
 else
-	echo "Your distribution \"$(lsb_release  -is) $(lsb_release  -rs)\" is not supported."
+	echo "Your distribution \"$SYSTEM_DISTRO\" is not supported."
 	exit 12
 fi
 
@@ -154,6 +157,10 @@ chown $ZABBIX_USER_NAME:$ZABBIX_USER_NAME /etc/zabbix/zabbix_agentd.d/
 # Log dir
 mkdir -p $ZABBIX_LOG_DIR_LOCATION
 chown $ZABBIX_USER_NAME:$ZABBIX_USER_NAME $ZABBIX_LOG_DIR_LOCATION
+
+# PID dir
+mkdir -p $ZABBIX_PID_DIR_LOCATION
+chown $ZABBIX_USER_NAME:$ZABBIX_USER_NAME $ZABBIX_PID_DIR_LOCATION
 
 # Backup old zabbix configuration
 mv $ZABBIX_CONF_LOCATION "$ZABBIX_CONF_LOCATION".old
