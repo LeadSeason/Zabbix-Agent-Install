@@ -24,6 +24,7 @@ ZABBIX_USER_NAME="zabbix"
 
 SYSTEM_DISTRO=$(awk -F= '$1 == "ID" {print $2}' /etc/os-release)
 SYSTEM_IP=$(ip -o route get to 8.8.8.8 | sed -n 's/.*src \([^ ]*\).*/\1/p')
+# Route error in to null. If no ipv6 route
 SYSTEM_IPV6=$(ip -o route get to 2001:4860:4860::8888 | sed -n 's/.*src \([^ ]*\).*/\1/p')
 SYSTEM_HOSTNAME=$(cat /etc/hostname)
 
@@ -76,7 +77,7 @@ if [ "$SYSTEM_DISTRO" = "ubuntu" ]; then
 	UBUNTUTMP2=$(cut -f2 <<< "$UBUNTUTMP")
 	UBUNTU_VERSION_FILE="zabbix-release_7.0-2+ubuntu${UBUNTUTMP2}_all.deb"
 	
-	wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/$UBUNTU_VERSION_FILE -o /tmp/$UBUNTU_VERSION_FILE
+	wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/$UBUNTU_VERSION_FILE -O /tmp/$UBUNTU_VERSION_FILE
 	dpkg -i /tmp/$UBUNTU_VERSION_FILE 
 	
 	apt-get update -y
