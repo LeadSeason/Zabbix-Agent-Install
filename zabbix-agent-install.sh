@@ -21,6 +21,8 @@ ZABBIX_LOG_DIR_LOCATION="/var/log/zabbix/"
 ZABBIX_PID_LOCATION="/run/zabbix/zabbix_agentd.pid"
 ZABBIX_PID_DIR_LOCATION="/run/zabbix/"
 ZABBIX_USER_NAME="zabbix"
+ZABBIX_VERSION="zabbix-agent"
+ZABBIX_VERSION_2="zabbix-agent2"
 
 SYSTEM_DISTRO=$(awk -F= '$1 == "ID" {print $2}' /etc/os-release)
 SYSTEM_IP=$(ip -o route get to 8.8.8.8 | sed -n 's/.*src \([^ ]*\).*/\1/p')
@@ -28,12 +30,13 @@ SYSTEM_IP=$(ip -o route get to 8.8.8.8 | sed -n 's/.*src \([^ ]*\).*/\1/p')
 SYSTEM_IPV6=$(ip -o route get to 2001:4860:4860::8888 | sed -n 's/.*src \([^ ]*\).*/\1/p')
 SYSTEM_HOSTNAME=$(cat /etc/hostname)
 
-# Argument handeling
+# Argument handling
 usage() {
     printf "%s\n" "Usage: $0 
-    --server <zabbix_server>    Server IP, seporated with \", \" for multi ip. Defaults to 10.10.10.10
+    --server <zabbix_server>    Server IP, separated with \", \" for multi ip. Defaults to 10.10.10.10
     --port <zabbix_port>        Zabbix-agent listening port. Defaults to 10050
     --psk-enabled <0|1>         Enable psk, outputs psk settings at the end of the script. Defaults to 1.
+    --agent-version <1|2>       Install zabbix-agent or zabbix-agent2. Defaults to zabbix-agent.
     --help			            Show this help message.
 "
     exit 0
@@ -53,6 +56,19 @@ while [ "$#" -gt 0 ]; do
             ZABBIX_PKS_ENABLED="$2"
             shift 2
             ;;
+        --agent-version)
+            if [ $2 = 1 ]; then
+                ZABBIX_VERSION="zabbix-agent"
+                ZABBIX_VERSION_2="zabbix-agent2"
+            elif [ $2 = 2 ]; then
+                ZABBIX_VERSION="zabbix-agent2"
+                ZABBIX_VERSION_2="zabbix-agent"
+            else
+                echo -e "Invalid argument for --agent-version, Acceptable arguments 1 or 2."
+                exit 1
+            fi
+            shift 2
+            ;;
 	    --help)
 	        usage
             ;;
@@ -66,6 +82,7 @@ done
 echo "Zabbix Server: $ZABBIX_SERVER"
 echo "Zabbix Port: $ZABBIX_PORT"
 echo "PSK Enabled: $ZABBIX_PKS_ENABLED"
+echo "Zabbix Agent version: $ZABBIX_VERSION"
 
 # Install Zabbix-agent
 # Ubuntu
@@ -81,14 +98,14 @@ if [ "$SYSTEM_DISTRO" = "ubuntu" ]; then
 	dpkg -i /tmp/$UBUNTU_VERSION_FILE 
 	
 	apt-get update -y
-	apt-get install zabbix-agent -y || exit 11
+	apt-get install $ZABBIX_VERSION -y || exit 11
 
 # Debian
 elif [ "$SYSTEM_DISTRO" = "debian" ]; then
 	echo "Debian detected, continuing with install."
 
 	apt-get update -y > /dev/null
-	apt-get install zabbix-agent -y > /dev/null
+	apt-get install $ZABBIX_VERSION -y > /dev/null
 
 # ArchLinux
 elif [ "$SYSTEM_DISTRO" = "arch" ]; then
@@ -98,33 +115,38 @@ elif [ "$SYSTEM_DISTRO" = "arch" ]; then
 	echo "Press Enter to continue. Press Ctrl + c to cancel."
 	read || exit 13
 
- 	# @TODO
-  	# Zabbix has diffrent dirrectorys for logs. Add later.
+    # 
     ZABBIX_USER_NAME="zabbix-agent"
  	
 	pacman -Sy --noconfirm archlinux-keyring || exit 11
 	pacman -Syu --noconfirm || exit 11
-	pacman -S --noconfirm zabbix-agent || exit 11
+	pacman -S --noconfirm $ZABBIX_VERSION || exit 11
 
 # CentOS
 elif [ "$SYSTEM_DISTRO" = "centos" ]; then
 	echo "CentOS detected, continuing with install."
-	
+	echo "PKS Disabled!"
 	# For some reason Zabbix-agent will not work with pks on rhel based systems
 	ZABBIX_PKS_ENABLED=0
+    echo "PSK Enabled: $ZABBIX_PKS_ENABLED"
+
 	ZABBIX_CONF_LOCATION="/etc/zabbix_agentd.conf"
 	
-	yum install -y zabbix-agent
+	yum install -y $ZABBIX_VERSION
 
 # RockyLinux
 elif [ "$SYSTEM_DISTRO" = "\"rocky\"" ]; then
 	echo "Rocky detected, continuing with install."
+	echo "PKS Disabled!"
+	# For some reason Zabbix-agent will not work with pks on rhel based systems
+	ZABBIX_PKS_ENABLED=0
+    echo "PSK Enabled: $ZABBIX_PKS_ENABLED"
 
  	# For some reason Zabbix-agent will not work with pks on rhel based systems
 	ZABBIX_PKS_ENABLED=0
 	ZABBIX_CONF_LOCATION="/etc/zabbix_agentd.conf"
 	
-	yum install -y zabbix-agent
+	yum install -y $ZABBIX_VERSION
 
 # Default
 else
@@ -147,8 +169,8 @@ Include=/etc/zabbix/zabbix_agentd.d/*.conf
 "
 
 # Enable at boot
-echo "Enabaling Zabbix at boot ..."
-systemctl enable zabbix-agent
+echo "Enabling Zabbix at boot ..."
+systemctl enable $ZABBIX_VERSION
 
 # Configuration install
 echo "Installing configuration ..."
@@ -177,18 +199,22 @@ if [ "$ZABBIX_PKS_ENABLED" -ne 0 ]; then
 	chown $ZABBIX_USER_NAME:$ZABBIX_USER_NAME /etc/zabbix/zabbix_agentd.psk
 	chmod 400 /etc/zabbix/zabbix_agentd.psk
 
-	ZABBIX_PKS_CONFIGUARION="# Zabbix PSK
+	ZABBIX_PKS_CONFIGURATION_PSK="# Zabbix PSK
 TLSConnect=psk
 TLSAccept=psk
 TLSPSKFile=/etc/zabbix/zabbix_agentd.psk
 TLSPSKIdentity=PSK-$SYSTEM_HOSTNAME
 " 
-	printf "%s\n" "$ZABBIX_PKS_CONFIGUARION" >> "$ZABBIX_CONF_LOCATION"
+	printf "%s\n" "$ZABBIX_PKS_CONFIGURATION_PSK" >> "$ZABBIX_CONF_LOCATION"
 fi
 
+## Stop and disable old version if we are upgrading
+systemctl is-enabled $ZABBIX_VERSION_2 && systemctl disable $ZABBIX_VERSION_2
+systemctl is-active $ZABBIX_VERSION_2 && systemctl stop $ZABBIX_VERSION_2 
+
 # Restart Zabbix
-echo "Restaring Zabbix agent ..."
-systemctl restart zabbix-agent
+echo "Restarting Zabbix agent ..."
+systemctl restart $ZABBIX_VERSION
 
 # Allow Zabbix in
 # UFW
