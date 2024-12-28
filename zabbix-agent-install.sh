@@ -121,27 +121,11 @@ elif [ "$SYSTEM_DISTRO" = "arch" ]; then
 	pacman -Syu --noconfirm || exit 11
 	pacman -S --noconfirm zabbix-agent$ZABBIX_VERSION || exit 11
 
-# CentOS
-elif [ "$SYSTEM_DISTRO" = "centos" ]; then
-	echo "CentOS detected, continuing with install."
+# CentOS or RockyLinux
+elif [ "$SYSTEM_DISTRO" = "centos" ] || [ "$SYSTEM_DISTRO" = "\"rocky\"" ]; then
+	echo "RHEL based distribution detected, continuing with install."
 	echo "PKS Disabled!"
 	# For some reason Zabbix-agent will not work with pks on rhel based systems
-	ZABBIX_PKS_ENABLED=0
-    echo "PSK Enabled: $ZABBIX_PKS_ENABLED"
-
-	ZABBIX_CONF_LOCATION="/etc/zabbix_agent$ZABBIX_VERSION.conf"
-	
-	yum install -y zabbix-agent$ZABBIX_VERSION
-
-# RockyLinux
-elif [ "$SYSTEM_DISTRO" = "\"rocky\"" ]; then
-	echo "Rocky detected, continuing with install."
-	echo "PKS Disabled!"
-	# For some reason Zabbix-agent will not work with pks on rhel based systems
-	ZABBIX_PKS_ENABLED=0
-    echo "PSK Enabled: $ZABBIX_PKS_ENABLED"
-
- 	# For some reason Zabbix-agent will not work with pks on rhel based systems
 	ZABBIX_PKS_ENABLED=0
 	ZABBIX_CONF_LOCATION="/etc/zabbix_agent$ZABBIX_VERSION.conf"
 	
