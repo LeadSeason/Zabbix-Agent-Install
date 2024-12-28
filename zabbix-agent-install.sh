@@ -114,7 +114,7 @@ elif [ "$SYSTEM_DISTRO" = "arch" ]; then
 	echo "Press Enter to continue. Press Ctrl + c to cancel."
 	read || exit 13
 
-    # 
+	ZABBIX_PID_LOCATION="/tmp/zabbix_agentd.pid"
     ZABBIX_USER_NAME="zabbix-agent"
  	
 	pacman -Sy --noconfirm archlinux-keyring || exit 11
