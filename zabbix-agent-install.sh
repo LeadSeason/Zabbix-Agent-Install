@@ -14,6 +14,7 @@ ZABBIX_SERVER="10.10.10.10"
 ZABBIX_PORT="10050"
 ZABBIX_PKS_ENABLED=1
 
+ZABBIX_CONF_LOCATION="/etc/zabbix/zabbix_agentd.conf"
 ZABBIX_CONF_DIR_LOCATION="/etc/zabbix/"
 ZABBIX_LOG_LOCATION="/var/log/zabbix/zabbix_agentd.log"
 ZABBIX_LOG_DIR_LOCATION="/var/log/zabbix/"
