@@ -14,6 +14,7 @@ ZABBIX_SERVER="10.10.10.10"
 ZABBIX_PORT="10050"
 ZABBIX_PKS_ENABLED=1
 
+ZABBIX_CONF_LOCATION="/etc/zabbix/zabbix_agent.conf"
 ZABBIX_CONF_DIR_LOCATION="/etc/zabbix/"
 ZABBIX_LOG_LOCATION="/var/log/zabbix/zabbix_agentd.log"
 ZABBIX_LOG_DIR_LOCATION="/var/log/zabbix/"
@@ -192,8 +193,8 @@ TLSPSKIdentity=PSK-$SYSTEM_HOSTNAME
 fi
 
 ## Stop and disable old version if we are upgrading
-systemctl is-enabled zabbix-agent$ZABBIX_VERSION_2 && systemctl disable zabbix-agent$ZABBIX_VERSION_2
-systemctl is-active zabbix-agent$ZABBIX_VERSION_2 && systemctl stop zabbix-agent$ZABBIX_VERSION_2 
+systemctl is-enabled zabbix-agent$ZABBIX_VERSION 2> /dev/null && systemctl disable zabbix-agent$ZABBIX_VERSION
+systemctl is-active zabbix-agent$ZABBIX_VERSION > /dev/null && systemctl stop zabbix-agent$ZABBIX_VERSION
 
 # Restart Zabbix
 echo "Restarting Zabbix agent ..."
