@@ -15,14 +15,14 @@ ZABBIX_PORT="10050"
 ZABBIX_PKS_ENABLED=1
 
 ZABBIX_CONF_DIR_LOCATION="/etc/zabbix/"
-ZABBIX_LOG_LOCATION="/var/log/zabbix/zabbix_agentd.log"
-ZABBIX_LOG_DIR_LOCATION="/var/log/zabbix/"
+ZABBIX_LOG_LOCATION="/var/log/zabbix-agent/zabbix_agentd.log"
+ZABBIX_LOG_DIR_LOCATION="/var/log/zabbix-agent/"
 ZABBIX_PID_LOCATION="/run/zabbix/zabbix_agentd.pid"
 ZABBIX_PID_DIR_LOCATION="/run/zabbix/"
 ZABBIX_USER_NAME="zabbix"
 ZABBIX_VERSION=""
 ZABBIX_VERSION_2="2"
-ZABBIX_CONF_LOCATION="/etc/zabbix/zabbix_agent$ZABBIX_VERSION.conf"
+ZABBIX_CONF_LOCATION="/etc/zabbix/zabbix_agentd.conf"
 
 SYSTEM_DISTRO=$(awk -F= '$1 == "ID" {print $2}' /etc/os-release)
 SYSTEM_IP=$(ip -o route get to 8.8.8.8 | sed -n 's/.*src \([^ ]*\).*/\1/p')
